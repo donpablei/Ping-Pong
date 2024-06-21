@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ping Pong</title>
+    <style>
+        canvas {
+            background-color: black;
+            display: block;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <script>
+        // Obtenemos el canvas y el contexto
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Variables para las paletas y la pelota
+        let paletaA = { x: 50, y: canvas.height / 2 - 50, width: 10, height: 100, color: '#00bfff', score: 0, name: 'Jugador A' };
+        let paletaB = { x: canvas.width - 60, y: canvas.height / 2 - 50, width: 10, height: 100, color: '#98fb98', score: 0, name: 'Jugador B' };
+        let pelota = { x: canvas.width / 2, y: canvas.height / 2, radius: 10, dx: 5, dy: 5, speed: 5 };
+
+        // Función para dibujar las paletas
+        function dibujarPaletas() {
+            // Paleta A
+            ctx.fillStyle = paletaA.color;
+            ctx.fillRect(paletaA.x, paletaA.y, paletaA.width, paletaA.height);
+
+            // Paleta B
+            ctx.fillStyle = paletaB.color;
+            ctx.fillRect(paletaB.x, paletaB.y, paletaB.width, paletaB.height);
+        }
+
+        // Función para dibujar la pelota
+        function dibujarPelota() {
+            ctx.beginPath();
+            ctx.arc(pelota.x, pelota.y, pelota.radius, 0, Math.PI * 2);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        // Función para dibujar el marcador
+        function dibujarMarcador() {
+            ctx.fillStyle = 'white';
+            ctx.font = '30px Arial';
+            ctx.fillText(`${paletaA.name}: ${paletaA.score}`, 20, 40);
+            ctx.fillText(`${paletaB.name}: ${paletaB.score}`, canvas.width - 200, 40);
+        }
+
+        // Función principal de dibujo
+        function dibujar() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            dibujarPaletas();
+            dibujarPelota();
+            dibujarMarcador();
+        }
+
+        // Función para mover las paletas
+        function moverPaletas() {
+            // Paleta A
+            if (paletaA.y + pelota.dy > 0 && paletaA.y + paletaA.height + pelota.dy < canvas.height) {
+                paletaA.y += pelota.dy;
+            }
+
+            // Paleta B
+            if (paletaB.y + pelota.dy > 0 && paletaB.y + paletaB.height + pelota.dy < canvas.height) {
+                paletaB.y += pelota.dy;
+            }
+        }
+
+        // Función para actualizar la posición de la pelota
+        function moverPelota() {
+            pelota.x += pelota.dx;
+            pelota.y += pelota.dy;
+
+            // Colisiones con las paredes superior e inferior
+            if (pelota.y + pelota.dy > canvas.height - pelota.radius || pelota.y + pelota.dy < pelota.radius) {
+                pelota.dy *= -1;
+            }
+
+            // Colisión con la paleta A
+            if (pelota.x - pelota.radius <= paletaA.x + paletaA.width &&
+                pelota.y >= paletaA.y && pelota.y <= paletaA.y + paletaA.height) {
+                pelota.dx *= -1;
+            }
+
+            // Colisión con la paleta B
+            if (pelota.x + pelota.radius >= paletaB.x &&
+                pelota.y >= paletaB.y && pelota.y <= paletaB.y + paletaB.height) {
+                pelota.dx *= -1;
+            }
+
+            // Punto para la paleta A
+            if (pelota.x + pelota.dx > canvas.width - pelota.radius) {
+                paletaA.score++;
+                resetearPelota();
+            }
+
+            // Punto para la paleta B
+            if (pelota.x + pelota.dx < pelota.radius) {
+                paletaB.score++;
+                resetearPelota();
+            }
+        }
+
+        // Función para resetear la posición de la pelota
+        function resetearPelota() {
+            pelota.x = canvas.width / 2;
+            pelota.y = canvas.height / 2;
+            pelota.dx = (pelota.dx > 0) ? pelota.speed : -pelota.speed;
+            pelota.dy = (pelota.dy > 0) ? pelota.speed : -pelota.speed;
+        }
+
+        // Función principal del juego
+        function actualizar() {
+            moverPaletas();
+            moverPelota();
+            dibujar();
+        }
+
+        // Eventos de teclado táctil
+        canvas.addEventListener('touchstart', function(event) {
+            let touchY = event.touches[0].clientY;
+
+            // Mover paleta A
+            if (touchY < canvas.height / 2) {
+                paletaA.y -= 10;
+            }
+
+            // Mover paleta B
+            if (touchY > canvas.height / 2) {
+                paletaB.y -= 10;
+            }
+        });
+
+        canvas.addEventListener('touchmove', function(event) {
+            let touchY = event.touches[0].clientY;
+
+            // Mover paleta A
+            if (touchY < canvas.height / 2) {
+                paletaA.y = touchY - paletaA.height / 2;
+            }
+
+            // Mover paleta B
+            if (touchY > canvas.height / 2) {
+                paletaB.y = touchY - paletaB.height / 2;
+            }
+        });
+
+        // Bucle de animación
+        setInterval(actualizar, 1000 / 60);  // Actualiza 60 veces por segundo
+    </script>
+</body>
+</html>
